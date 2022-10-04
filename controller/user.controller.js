@@ -1,5 +1,4 @@
 const model = require("../models/index");
-const { timer } = require("../utils/index");
 const utils = require("../utils/index");
 
 const methods = {
@@ -38,7 +37,52 @@ const methods = {
       }
       return res
         .status(501)
-        .json({ success: false, msg: "Cannot create user", error });
+        .json({ success: false, msg: "Error! Cannot create user", error });
+    }
+  },
+  changeName: async (req, res) => {
+    console.log("<== Change Name Called");
+    try {
+      if (!req.token?.id) throw "Error! Invalid request";
+      let name = req.body?.fullName;
+      if (!name) throw "Error! Invalid request";
+      let user = await model.Users.findByPk(req.token?.id);
+      if (!user) throw "Error! Invalid request";
+      await user.update({ fullName: name });
+      return res
+        .status(200)
+        .json({ success: true, msg: "Name changed Successfully" });
+    } catch (error) {
+      return res
+        .status(501)
+        .json({ success: false, msg: "Error! Cannot Change Name", error });
+    }
+  },
+  changePass: async (req, res) => {
+    console.log("<== Change Pass Called");
+    try {
+      let data = req.body;
+      if (!req.token?.id) throw "Error! Invalid request";
+      if (!data || !data.oldPass || !data.newPass || !data.newPass2)
+        throw "Error! Invalid request";
+      if (data.newPass !== data.newPass2) throw "Error! Password do not match";
+      let user = await model.Users.findByPk(req.token?.id);
+      if (!user) throw "Error! Invalid request";
+      let match = await utils.comparePassword(
+        data?.oldPass,
+        user.dataValues.password
+      );
+      if (!match) throw "Error! Invalid credentials";
+      let pass = await utils.hashPassword(data.newPass);
+      await user.update({ password: pass });
+      return res
+        .status(200)
+        .json({ success: true, msg: "password changed Successfully" });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(501)
+        .json({ success: false, msg: "Error! Cannot Change password", error });
     }
   },
   loginUser: async (req, res) => {
@@ -67,7 +111,7 @@ const methods = {
       return res.status(200).json({ success: true, result });
     } catch (error) {
       console.log(error);
-      res
+      return res
         .status(501)
         .json({ success: false, msg: "Error! Invalid request", error });
     }
@@ -92,7 +136,9 @@ const methods = {
       return res.status(200).json({ success: true, result });
     } catch (error) {
       console.log(error);
-      res.status(401).json({ success: false, msg: "Invalid Token", error });
+      return res
+        .status(401)
+        .json({ success: false, msg: "Invalid Token", error });
     }
   },
 };

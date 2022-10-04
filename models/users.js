@@ -18,10 +18,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
-      password: {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      },
       status: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

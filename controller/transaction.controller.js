@@ -1,8 +1,57 @@
 const model = require("../models/index");
-const { timer } = require("../utils");
-const Op = model.Sequelize.Op;
 
 const methods = {
+  pieTransaction: async (req, res) => {
+    console.log("<== Pie Transaction called");
+    try {
+      if (!req.token?.id) throw "Error! Invalid request";
+      let user = await model.Users.findByPk(req.token?.id);
+      if (!user) throw "Error! Invalid request";
+      const total_lent = await model.Transactions.count({
+        where: {
+          user_id: req.token?.id,
+          type: "lent",
+        },
+      });
+      const total_borrowed = await model.Transactions.count({
+        where: {
+          user_id: req.token?.id,
+          type: "borrowed",
+        },
+      });
+      const lent_pending = await model.Transactions.count({
+        where: {
+          user_id: req.token?.id,
+          type: "lent",
+          status: [0, 2],
+        },
+      });
+      const borrowed_pending = await model.Transactions.count({
+        where: {
+          user_id: req.token?.id,
+          type: "borrowed",
+          status: [0, 2],
+        },
+      });
+      const labels = [
+        "Total lent",
+        "Total borrowed",
+        "Lent pending",
+        "Borrowed pending",
+      ];
+      const vals = [total_lent, total_borrowed, lent_pending, borrowed_pending];
+      return res.status(200).json({
+        success: true,
+        msg: "transaction pie fetched Successfully",
+        result: { labels, vals },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(501)
+        .json({ success: false, msg: "Cannot fetch pie transaction", error });
+    }
+  },
   createTransaction: async (req, res) => {
     console.log("<== Create transaction Called");
     let data = req.body;
@@ -30,7 +79,6 @@ const methods = {
   getTransactionDetails: async (req, res) => {
     console.log("<== Get transactionDetails Called");
     try {
-      console.log(req.query);
       if (!req.token?.id) throw "Error! Invalid request";
       let id = req.query?.trans_id;
       if (!id) throw "Error! Invalid request";
@@ -48,6 +96,13 @@ const methods = {
             model: model.Payments,
             as: "transactionpayment",
           },
+        ],
+        order: [
+          [
+            { model: model.Payments, as: "transactionpayment" },
+            "remaining_amount",
+            "asc",
+          ],
         ],
       });
       return res.status(200).json({
@@ -79,7 +134,6 @@ const methods = {
       if (data.status && data.status === "done") {
         condition.status = 1;
       }
-		console.log(condition)
       let user = await model.Users.findByPk(req.token?.id);
       if (!user) throw "Error! Invalid request";
       let transactions = await model.Transactions.findAll({
@@ -129,7 +183,6 @@ const methods = {
   markTransaction: async (req, res) => {
     console.log("<== Mark transactions Called");
     const data = req.body;
-    console.log(data);
     try {
       if (!req.token?.id || !data || !data.id || !data.amount)
         throw "Error! Invalid request";
@@ -138,7 +191,6 @@ const methods = {
       });
       if (!transaction) throw "Error! No transaction found";
       let { status, amount, remaining_amount } = transaction?.dataValues;
-      console.log(remaining_amount);
       if (!remaining_amount) throw "Error! Already completed";
       if (status !== 0 && status !== 2) throw "Error! Invalid status";
       if (data.amount >= amount || !data.amount) {
@@ -146,6 +198,13 @@ const methods = {
           status: 1,
           last_transaction: data.paymentDate,
           remaining_amount: 0,
+        });
+        await model.Payments.create({
+          paid_amount: amount,
+          total_amount: amount,
+          remaining_amount: 0,
+          transaction_date: data.paymentDate,
+          transaction_id: transaction.dataValues.id,
         });
       } else {
         let remainCalc = Math.max(0, remaining_amount - data.amount);

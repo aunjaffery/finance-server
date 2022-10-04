@@ -8,9 +8,15 @@ const {
   markTransaction,
   deleteTransaction,
   getTransactionDetails,
+  pieTransaction,
 } = require("../controller/transaction.controller");
 const validateRequest = require("../middleware/validateRequest");
-const { loginUserSchema, createUserSchema } = require("../schema/user.schema");
+const {
+  loginUserSchema,
+  createUserSchema,
+  changeUserNameSchema,
+  changePassSchema,
+} = require("../schema/user.schema");
 const { createClientSchema } = require("../schema/client.schema");
 const {
   createTransactionSchema,
@@ -30,6 +36,18 @@ router.post(
   userController.loginUser
 );
 router.get("/validation", authPolicy, userController.validation);
+router.post(
+  "/changeName",
+  authPolicy,
+  validateRequest(changeUserNameSchema),
+  userController.changeName
+);
+router.post(
+  "/changePass",
+  authPolicy,
+  validateRequest(changePassSchema),
+  userController.changePass
+);
 
 //client routes
 router.post(
@@ -43,6 +61,7 @@ router.delete("/deleteClient/:id", authPolicy, clientController.deleteClient);
 
 //transaction routes
 router.post("/getTransactions", authPolicy, getTransactions);
+router.get("/pieTransaction", authPolicy, pieTransaction);
 router.get(
   "/getTransactionDetails",
   authPolicy,

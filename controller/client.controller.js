@@ -1,6 +1,12 @@
 const model = require("../models/index");
-const { timer } = require("../utils");
-
+const { fakeClients } = require("../utils/faker");
+const createBulkClients = async () => {
+  try {
+    await model.Clients.bulkCreate(fakeClients());
+  } catch (err) {
+    console.log(err);
+  }
+};
 const methods = {
   createClient: async (req, res) => {
     console.log("<== Create Client Called");
@@ -48,7 +54,6 @@ const methods = {
   deleteClient: async (req, res) => {
     console.log("<== Delete Clients Called");
     try {
-      console.log(req.params);
       if (!req.token?.id || !req.params.id) throw "Error! Invalid request";
       let user = await model.Users.findByPk(req.token?.id);
       if (!user) throw "Error! Invalid request";
