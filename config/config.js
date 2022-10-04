@@ -9,11 +9,12 @@ module.exports = {
     timezone: "+05:00",
   },
   production: {
-    username: "root",
-    password: null,
-    database: "database_production",
-    host: "127.0.0.1",
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: "planet",
+    host: process.env.DB_URL,
     dialect: "mysql",
     logging: false,
+    timezone: "+05:00",
   },
 };
