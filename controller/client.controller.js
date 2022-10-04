@@ -1,12 +1,4 @@
 const model = require("../models/index");
-const { fakeClients } = require("../utils/faker");
-const createBulkClients = async () => {
-  try {
-    await model.Clients.bulkCreate(fakeClients());
-  } catch (err) {
-    console.log(err);
-  }
-};
 const methods = {
   createClient: async (req, res) => {
     console.log("<== Create Client Called");
