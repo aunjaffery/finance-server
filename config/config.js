@@ -16,5 +16,10 @@ module.exports = {
     dialect: "mysql",
     logging: false,
     timezone: "+05:00",
+    dialectOptions: {
+      ssl: {
+        rejectUnauthorized: true,
+      },
+    },
   },
 };

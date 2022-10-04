@@ -27,8 +27,7 @@ module.exports = (sequelize, DataTypes) => {
   Payments.associate = function (models) {
     Payments.belongsTo(models.Transactions, {
       as: "transactionpayment",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+		constraints: false,
       foreignKey: {
         name: "transaction_id",
         allowNull: false,

@@ -32,8 +32,7 @@ module.exports = (sequelize, DataTypes) => {
   Users.associate = function (models) {
     Users.hasMany(models.Transactions, {
       as: "transactionuser",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      constraints: false,
       foreignKey: {
         name: "user_id",
         allowNull: false,
@@ -42,8 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Users.hasMany(models.Clients, {
       as: "userclients",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+      constraints: false,
       foreignKey: {
         name: "user_id",
         allowNull: false,

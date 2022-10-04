@@ -36,8 +36,7 @@ module.exports = (sequelize, DataTypes) => {
   Transactions.associate = function (models) {
     Transactions.hasMany(models.Payments, {
       as: "transactionpayment",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+		constraints: false,
       foreignKey: {
         name: "transaction_id",
         allowNull: false,
@@ -46,8 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Transactions.belongsTo(models.Users, {
       as: "transactionuser",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+		constraints: false,
       foreignKey: {
         name: "user_id",
         allowNull: false,
@@ -56,8 +54,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Transactions.belongsTo(models.Clients, {
       as: "transactionclient",
-      onDelete: "CASCADE",
-      onUpdate: "CASCADE",
+		constraints: false,
       foreignKey: {
         name: "client_id",
         allowNull: false,

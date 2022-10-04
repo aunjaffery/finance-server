@@ -5,7 +5,7 @@
   "author": "Aun Jaffery",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=production node app.js",
+    "start": "NODE_ENV=production node --require dotenv/config app.js",
     "dev": "NODE_ENV=development nodemon --require dotenv/config app.js"
   },
   "dependencies": {
