@@ -8,6 +8,8 @@ const moment = require("moment");
 const methods = {
   weekGraph: async (req, res) => {
     console.log("<== Week Graph Called");
+    console.log("<== WIHTOUT", moment().format("hhA DD-MMM"));
+    console.log("<== UTC FALSE", moment().utc(false).format("hhA DD-MMM"));
     try {
       let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
