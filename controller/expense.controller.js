@@ -94,7 +94,7 @@ const methods = {
       console.log(start, end);
       let monthly = await model.Expenses.findAll({
         where: {
-          user_id: 1,
+          user_id: req.token.id,
           expense_date: {
             [Op.between]: [start, end],
           },
