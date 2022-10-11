@@ -2,6 +2,8 @@ const model = require("../models/index");
 const { Op, Sequelize } = require("sequelize");
 const moment = require("moment");
 //SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
+//let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
+//console.log(date)
 
 const methods = {
   weekGraph: async (req, res) => {
@@ -11,11 +13,11 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let month = moment().format("DD-MM-YYYY");
       let start = moment(`${month}`, "DD-MM-YYYY")
-        .utc(true)
+        .utc(false)
         .subtract(span, "days")
         .toDate();
       let end = moment(`${month}`, "DD-MM-YYYY")
-        .utc(true)
+        .utc(false)
         .add(1, "day")
         .toDate();
       console.log(start, end);
@@ -84,12 +86,12 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let month = moment().format("DD-MM-YYYY");
       let start = moment(moment().format("01-MM-YYYY"), "DD-MM-YYYY")
-        .utc(true)
+        .utc(false)
         .subtract(span, "months")
         .toDate();
       let end = moment(`${month}`, "DD-MM-YYYY")
         .add(1, "day")
-        .utc(true)
+        .utc(false)
         .toDate();
       console.log(start, end);
       let monthly = await model.Expenses.findAll({
