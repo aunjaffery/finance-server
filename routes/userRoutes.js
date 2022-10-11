@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controller/user.controller");
 const clientController = require("../controller/client.controller");
+const expenseController = require("../controller/expense.controller");
 const {
   getTransactions,
   createTransaction,
@@ -19,12 +20,17 @@ const {
 } = require("../schema/user.schema");
 const { createClientSchema } = require("../schema/client.schema");
 const {
+  createExpenseSchema,
+  getExpenseSchema,
+} = require("../schema/expense.schema");
+const {
   createTransactionSchema,
   markTransactionSchema,
   transactionDetailSchema,
 } = require("../schema/transaction.schema");
 const authPolicy = require("../utils/auth.policy");
 
+//----------User Routes----------//
 router.post(
   "/signup",
   validateRequest(createUserSchema),
@@ -49,7 +55,7 @@ router.post(
   userController.changePass
 );
 
-//client routes
+//----------Client Routes----------//
 router.post(
   "/createClient",
   authPolicy,
@@ -59,7 +65,28 @@ router.post(
 router.get("/getUserClients", authPolicy, clientController.getUserClients);
 router.delete("/deleteClient/:id", authPolicy, clientController.deleteClient);
 
-//transaction routes
+//--------Expense Routes-----------//
+router.get("/weeklyExpense", authPolicy, expenseController.weekGraph);
+router.get("/monthlyExpense", authPolicy, expenseController.monthGraph);
+router.post(
+  "/createExpense",
+  authPolicy,
+  validateRequest(createExpenseSchema),
+  expenseController.createExpense
+);
+router.post(
+  "/getExpenses",
+  authPolicy,
+  validateRequest(getExpenseSchema),
+  expenseController.getExpenses
+);
+router.delete(
+  "/deleteExpense/:id",
+  authPolicy,
+  expenseController.deleteExpense
+);
+
+//-------Transaction Routes-------//
 router.post("/getTransactions", authPolicy, getTransactions);
 router.get("/pieTransaction", authPolicy, pieTransaction);
 router.get(

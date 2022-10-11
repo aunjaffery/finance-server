@@ -26,10 +26,10 @@ const methods = {
     let sorting = ["id", "desc"];
     try {
       if (!req.token?.id) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let clients = await model.Clients.findAll({
-        where: { user_id: req.token?.id },
+        where: { user_id: req.token.id },
         order: [sorting],
       });
       return res.status(200).json({
@@ -47,10 +47,10 @@ const methods = {
     console.log("<== Delete Clients Called");
     try {
       if (!req.token?.id || !req.params.id) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let client = await model.Clients.findOne({
-        where: { id: req.params?.id, user_id: req.token?.id },
+        where: { id: req.params?.id, user_id: req.token.id },
       });
       await client.destroy();
       return res.status(200).json({

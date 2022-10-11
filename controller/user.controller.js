@@ -46,7 +46,7 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let name = req.body?.fullName;
       if (!name) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       await user.update({ fullName: name });
       return res
@@ -66,7 +66,7 @@ const methods = {
       if (!data || !data.oldPass || !data.newPass || !data.newPass2)
         throw "Error! Invalid request";
       if (data.newPass !== data.newPass2) throw "Error! Password do not match";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let match = await utils.comparePassword(
         data?.oldPass,

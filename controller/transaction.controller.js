@@ -5,30 +5,30 @@ const methods = {
     console.log("<== Pie Transaction called");
     try {
       if (!req.token?.id) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       const total_lent = await model.Transactions.count({
         where: {
-          user_id: req.token?.id,
+          user_id: req.token.id,
           type: "lent",
         },
       });
       const total_borrowed = await model.Transactions.count({
         where: {
-          user_id: req.token?.id,
+          user_id: req.token.id,
           type: "borrowed",
         },
       });
       const lent_pending = await model.Transactions.count({
         where: {
-          user_id: req.token?.id,
+          user_id: req.token.id,
           type: "lent",
           status: [0, 2],
         },
       });
       const borrowed_pending = await model.Transactions.count({
         where: {
-          user_id: req.token?.id,
+          user_id: req.token.id,
           type: "borrowed",
           status: [0, 2],
         },
@@ -40,11 +40,20 @@ const methods = {
         "Borrowed pending",
       ];
       const vals = [total_lent, total_borrowed, lent_pending, borrowed_pending];
-      return res.status(200).json({
-        success: true,
-        msg: "transaction pie fetched Successfully",
-        result: { labels, vals },
-      });
+      let check = vals.every((x) => x === 0);
+      if (check) {
+        return res.status(200).json({
+          success: true,
+          msg: "transaction pie fetched Successfully",
+          result: null,
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          msg: "transaction pie fetched Successfully",
+          result: { labels, vals },
+        });
+      }
     } catch (error) {
       console.log(error);
       return res
@@ -59,7 +68,7 @@ const methods = {
       if (!data || !data.amount || !data.client_id)
         throw "Error! Invalid request";
       if (!req.token?.id) throw "Error! Invalid request";
-      data.user_id = req.token?.id;
+      data.user_id = req.token.id;
       data.remaining_amount = data.amount;
       data.status = 0;
       let client = await model.Clients.findByPk(data.client_id);
@@ -82,10 +91,10 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let id = req.query?.trans_id;
       if (!id) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let transaction = await model.Transactions.findOne({
-        where: { id, user_id: req.token?.id },
+        where: { id, user_id: req.token.id },
         include: [
           {
             model: model.Clients,
@@ -126,7 +135,7 @@ const methods = {
       let data = req.body;
       if (!req.token?.id) throw "Error! Invalid request";
       let condition = {
-        user_id: req.token?.id,
+        user_id: req.token.id,
       };
       if (data.status && data.status === "pending") {
         condition.status = [0, 2];
@@ -134,7 +143,7 @@ const methods = {
       if (data.status && data.status === "done") {
         condition.status = 1;
       }
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let transactions = await model.Transactions.findAll({
         where: condition,
@@ -163,10 +172,10 @@ const methods = {
     console.log("<== Delete transactions Called");
     try {
       if (!req.token?.id || !req.params.id) throw "Error! Invalid request";
-      let user = await model.Users.findByPk(req.token?.id);
+      let user = await model.Users.findByPk(req.token.id);
       if (!user) throw "Error! Invalid request";
       let transaction = await model.Transactions.findOne({
-        where: { id: req.params?.id, user_id: req.token?.id },
+        where: { id: req.params?.id, user_id: req.token.id },
       });
       await transaction.destroy();
       return res.status(200).json({
@@ -187,7 +196,7 @@ const methods = {
       if (!req.token?.id || !data || !data.id || !data.amount)
         throw "Error! Invalid request";
       let transaction = await model.Transactions.findOne({
-        where: { id: data.id, user_id: req.token?.id },
+        where: { id: data.id, user_id: req.token.id },
       });
       if (!transaction) throw "Error! No transaction found";
       let { status, amount, remaining_amount } = transaction?.dataValues;

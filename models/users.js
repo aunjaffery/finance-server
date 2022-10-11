@@ -48,6 +48,15 @@ module.exports = (sequelize, DataTypes) => {
         field: "user_id",
       },
     });
+    Users.hasMany(models.Expenses, {
+      as: "userexpense",
+      constraints: false,
+      foreignKey: {
+        name: "user_id",
+        allowNull: false,
+        field: "user_id",
+      },
+    });
   };
 
   return Users;
