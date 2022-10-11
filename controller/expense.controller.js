@@ -18,6 +18,7 @@ const methods = {
         .utc(true)
         .add(1, "day")
         .toDate();
+      console.log(start, end);
       let weekly = await model.Expenses.findAll({
         where: {
           user_id: req.token.id,
@@ -26,11 +27,13 @@ const methods = {
           },
         },
         attributes: [
-          "expense_date",
           [Sequelize.fn("SUM", Sequelize.col("amount")), "total_sum"],
+          [Sequelize.fn("day", Sequelize.col("expense_date")), "day"],
+          [Sequelize.fn("month", Sequelize.col("expense_date")), "month"],
+          [Sequelize.fn("year", Sequelize.col("expense_date")), "year"],
         ],
-        group: [Sequelize.fn("day", Sequelize.col("expense_date"))],
-        order: [["expense_date"]],
+        group: ["day", "month", "year"],
+        order: ["month", "day"],
         raw: true,
       });
       if (!weekly) throw "Error! Cannot fetch expenses";
@@ -41,9 +44,11 @@ const methods = {
           result: null,
         });
       }
-      let fmt_week = weekly.map((x) => ({
-        xdate: moment(x.expense_date).format("DD-MM-YYYY"),
+      const fmt_week = weekly.map((x) => ({
         sum: x.total_sum,
+        date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
+          "DD-MM-YYYY"
+        ),
       }));
       let labels = [];
       let vals = [];
@@ -52,7 +57,7 @@ const methods = {
         let found = false;
         labels.push(date);
         for (let j = 0; j < fmt_week.length; j++) {
-          if (fmt_week[j].xdate === date) {
+          if (fmt_week[j].date === date) {
             found = true;
             vals.push(fmt_week[j].sum);
             break;
@@ -86,19 +91,21 @@ const methods = {
         .add(1, "day")
         .utc(true)
         .toDate();
+      console.log(start, end);
       let monthly = await model.Expenses.findAll({
         where: {
-          user_id: req.token.id,
+          user_id: 1,
           expense_date: {
             [Op.between]: [start, end],
           },
         },
         attributes: [
-          "expense_date",
           [Sequelize.fn("SUM", Sequelize.col("amount")), "total_sum"],
+          [Sequelize.fn("month", Sequelize.col("expense_date")), "month"],
+          [Sequelize.fn("year", Sequelize.col("expense_date")), "year"],
         ],
-        group: [Sequelize.fn("month", Sequelize.col("expense_date"))],
-        order: [["expense_date"]],
+        group: ["month", "year"],
+        order: ["year", "month"],
         raw: true,
       });
       if (!monthly) throw "Error! Cannot fetch expenses";
@@ -109,9 +116,9 @@ const methods = {
           result: null,
         });
       }
-      let fmt_week = monthly.map((x) => ({
-        xdate: moment(x.expense_date).format("MM-YYYY"),
+      const fmt_month = monthly.map((x) => ({
         sum: x.total_sum,
+        date: moment(`${x.month}-${x.year}`, "M-YYYY").format("MM-YYYY"),
       }));
       let labels = [];
       let vals = [];
@@ -119,10 +126,10 @@ const methods = {
         let date = moment().subtract(i, "months").format("MM-YYYY");
         let found = false;
         labels.push(date);
-        for (let j = 0; j < fmt_week.length; j++) {
-          if (fmt_week[j].xdate === date) {
+        for (let j = 0; j < fmt_month.length; j++) {
+          if (fmt_month[j].date === date) {
             found = true;
-            vals.push(fmt_week[j].sum);
+            vals.push(fmt_month[j].sum);
             break;
           }
         }
