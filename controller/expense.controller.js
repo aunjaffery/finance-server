@@ -4,6 +4,10 @@ const moment = require("moment");
 //SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 //let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
 //console.log(date)
+console.log("<== WIHTOUT", moment().format("hhA DD-MMM"));
+let ut = moment().utc().format();
+console.log("<== UTC ", ut);
+console.log("<== ", moment(ut).format("hhA DD-MMM"));
 
 const methods = {
   weekGraph: async (req, res) => {
@@ -194,6 +198,7 @@ const methods = {
         attributes: { exclude: ["createdAt", "updatedAt", "user_id"] },
         order: [["expense_date", "desc"]],
       });
+      expenses.map((x) => console.log(`<== ${x.id} ${x.expense_date}`));
       if (!expenses || !expenses.length) {
         return res.status(200).json({
           success: true,
