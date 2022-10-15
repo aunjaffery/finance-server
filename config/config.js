@@ -6,8 +6,7 @@ module.exports = {
     host: "127.0.0.1",
     dialect: "mysql",
     logging: false,
-    timezone: "+05:00",
-    useUTC: false,
+    // timezone: "+05:00",
   },
   production: {
     username: process.env.DB_USER,

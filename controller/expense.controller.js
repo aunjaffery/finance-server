@@ -4,29 +4,36 @@ const moment = require("moment");
 //SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 //let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
 //console.log(date)
-console.log("<== WIHTOUT", moment().format("hhA DD-MMM"));
-let ut = moment().utc().format();
-console.log("<== UTC ", ut);
-console.log("<== ", moment(ut).format("hhA DD-MMM"));
 
+const func = async () => {
+  let span = 6;
+  let f = "HH:mm DD-MM-YYYY";
+  let dateNow = moment().utc().format("HH:mm DD-MM-YYYY");
+  let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
+  console.log("c --->", dateNow, zeroTime);
+  let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
+  let end = moment(dateNow, f).utc(true).toDate();
+  console.log("start -->", start);
+  console.log("end -->", end);
+  console.log("res -->", moment(start).format(f), moment(end).format(f));
+};
+//func();
 const methods = {
   weekGraph: async (req, res) => {
     console.log("<== Week Graph Called");
     console.log("<== WIHTOUT", moment().format("hhA DD-MMM"));
-    console.log("<== UTC FALSE", moment().utc(false).format("hhA DD-MMM"));
+    console.log("<== UTC FALSE", moment().utc().format("hhA DD-MMM"));
     try {
       let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
-      let month = moment().format("DD-MM-YYYY");
-      let start = moment(`${month}`, "DD-MM-YYYY")
-        .utc(false)
-        .subtract(span, "days")
-        .toDate();
-      let end = moment(`${month}`, "DD-MM-YYYY")
-        .utc(false)
-        .add(1, "day")
-        .toDate();
-      console.log(start, end);
+      let f = "HH:mm DD-MM-YYYY";
+      let dateNow = moment().utc().format("HH:mm DD-MM-YYYY");
+      let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
+      let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
+      let end = moment(dateNow, f).utc(true).toDate();
+      console.log("start -->", start);
+      console.log("end -->", end);
+      console.log("res -->", moment(start).format(f), moment(end).format(f));
       let weekly = await model.Expenses.findAll({
         where: {
           user_id: req.token.id,
@@ -52,12 +59,14 @@ const methods = {
           result: null,
         });
       }
+		console.log(weekly)
       const fmt_week = weekly.map((x) => ({
         sum: x.total_sum,
         date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
           "DD-MM-YYYY"
         ),
       }));
+		console.log(fmt_week)
       let labels = [];
       let vals = [];
       for (let i = span; i >= 0; i--) {
@@ -92,13 +101,10 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let month = moment().format("DD-MM-YYYY");
       let start = moment(moment().format("01-MM-YYYY"), "DD-MM-YYYY")
-        .utc(false)
+        .utc()
         .subtract(span, "months")
         .toDate();
-      let end = moment(`${month}`, "DD-MM-YYYY")
-        .add(1, "day")
-        .utc(false)
-        .toDate();
+      let end = moment(`${month}`, "DD-MM-YYYY").add(1, "day").utc().toDate();
       console.log(start, end);
       let monthly = await model.Expenses.findAll({
         where: {
@@ -183,9 +189,9 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let { date } = req.body;
       if (!date) throw "Error! No date found";
-      let start = moment(`01-${date}`, "DD-MMM-YYYY").utc(true).toDate();
+      let start = moment(`01-${date}`, "DD-MMM-YYYY").utc().toDate();
       let end = moment(`01-${date}`, "DD-MMM-YYYY")
-        .utc(true)
+        .utc()
         .add("1", "month")
         .toDate();
       let expenses = await model.Expenses.findAll({
