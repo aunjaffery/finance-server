@@ -17,7 +17,7 @@ const func = async () => {
   console.log("end -->", end);
   console.log("res -->", moment(start).format(f), moment(end).format(f));
 };
-//func();
+func();
 const methods = {
   weekGraph: async (req, res) => {
     console.log("<== Week Graph Called");
@@ -29,6 +29,7 @@ const methods = {
       let f = "HH:mm DD-MM-YYYY";
       let dateNow = moment().utc().format("HH:mm DD-MM-YYYY");
       let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
+      console.log("c --->", dateNow, zeroTime);
       let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
       let end = moment(dateNow, f).utc(true).toDate();
       console.log("start -->", start);
@@ -59,14 +60,14 @@ const methods = {
           result: null,
         });
       }
-		console.log(weekly)
+      console.log(weekly);
       const fmt_week = weekly.map((x) => ({
         sum: x.total_sum,
         date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
           "DD-MM-YYYY"
         ),
       }));
-		console.log(fmt_week)
+      console.log(fmt_week);
       let labels = [];
       let vals = [];
       for (let i = span; i >= 0; i--) {
