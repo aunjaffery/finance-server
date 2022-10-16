@@ -233,11 +233,13 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let { date } = req.body;
       if (!date) throw "Error! No date found";
-      let start = moment(`01-${date}`, "DD-MMM-YYYY").utc().toDate();
+      let start = moment(`01-${date}`, "DD-MMM-YYYY").utcOffset(300).toDate();
       let end = moment(`01-${date}`, "DD-MMM-YYYY")
-        .utc()
+        .utcOffset(300)
         .add("1", "month")
         .toDate();
+      console.log("start -->", start);
+      console.log("end -->", end);
       let expenses = await model.Expenses.findAll({
         where: {
           user_id: req.token.id,
