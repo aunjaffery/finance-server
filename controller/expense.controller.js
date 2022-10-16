@@ -4,8 +4,57 @@ const moment = require("moment");
 //SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 //let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
 //console.log(date)
+const fun = async () => {
+  let f = "HH:mm DD-MM-YYYY";
+  let ctz = 300;
+  console.log(moment().utc().utcOffset(ctz).format(f));
+  let weekly = await model.Expenses.findAll({
+    where: { user_id: 6 },
+    attributes: ["id", "amount", "expense_date"],
+    raw: true,
+  });
+  let fmt = weekly.map((w) => ({
+    id: w.id,
+    amount: w.amount,
+    expense_date: moment(w.expense_date).utc().format(f),
+  }));
 
+  console.log(weekly);
+  console.log(fmt);
+};
 const methods = {
+  checktz: async (req, res) => {
+    let id = req.body.id;
+    let ctz = req.body.ctz;
+    let f = "HH:mm DD-MM-YYYY";
+    try {
+      if (!id || !ctz) throw "Eror";
+      let off = moment().utc().utcOffset(ctz).format(f);
+      let weekly = await model.Expenses.findAll({
+        where: { user_id: id },
+        attributes: ["id", "amount", "expense_date"],
+        raw: true,
+      });
+      if (!weekly || !weekly.length) throw "error no found";
+      let fmt = weekly.map((w) => ({
+        id: w.id,
+        amount: w.amount,
+        exp: moment(w.expense_date).format(f),
+        exp_utc: moment(w.expense_date).utc().format(f),
+        exp_off: moment(w.expense_date).utcOffset(ctz).format(f),
+        exp_utc_off: moment(w.expense_date).utc().utcOffset(ctz).format(f),
+      }));
+
+      console.log(weekly);
+      console.log(fmt);
+      return res.status(200).json({ weekly, fmt, off });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(501)
+        .json({ success: false, msg: "Cannot fetch expense", error });
+    }
+  },
   weekGraph: async (req, res) => {
     console.log("<== Weekly Graph Called");
     try {
