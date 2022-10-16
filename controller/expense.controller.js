@@ -186,7 +186,6 @@ const methods = {
         attributes: { exclude: ["createdAt", "updatedAt", "user_id"] },
         order: [["expense_date", "desc"]],
       });
-      expenses.map((x) => console.log(`<== ${x.id} ${x.expense_date}`));
       if (!expenses || !expenses.length) {
         return res.status(200).json({
           success: true,
