@@ -31,8 +31,6 @@ const {
 const authPolicy = require("../utils/auth.policy");
 
 //----------User Routes----------//
-
-router.post("/checktz", expenseController.checktz);
 router.post(
   "/signup",
   validateRequest(createUserSchema),

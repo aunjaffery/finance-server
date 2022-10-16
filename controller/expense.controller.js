@@ -5,61 +5,58 @@ const moment = require("moment");
 //let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
 //console.log(date)
 const fun = async () => {
-  let f = "HH:mm DD-MM-YYYY";
+  let span = 6;
   let ctz = 300;
-  console.log(moment().utc().utcOffset(ctz).format(f));
+  let dt = "DD-MM-YYYY";
+  let f = "HH:mm DD-MM-YYYY";
+  let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
+  let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
+  let end = moment(zeroTime, f).add(1, "day").utc(true).toDate();
+  console.log("start -->", start);
+  console.log("end -->", end);
   let weekly = await model.Expenses.findAll({
-    where: { user_id: 6 },
-    attributes: ["id", "amount", "expense_date"],
+    where: {
+      user_id: 6,
+      expense_date: {
+        [Op.between]: [start, end],
+      },
+    },
+    attributes: ["amount", "expense_date"],
+    order: ["expense_date"],
     raw: true,
   });
   let fmt = weekly.map((w) => ({
-    id: w.id,
     amount: w.amount,
-    expense_date: moment(w.expense_date).utc().format(f),
+    date: moment(w.expense_date).utcOffset(ctz).format(dt),
   }));
-
-  console.log(weekly);
   console.log(fmt);
-};
-const methods = {
-  checktz: async (req, res) => {
-    let id = req.body.id;
-    let ctz = req.body.ctz;
-    let f = "HH:mm DD-MM-YYYY";
-    try {
-      if (!id || !ctz) throw "Eror";
-      let off = moment().utc().utcOffset(ctz).format(f);
-      let weekly = await model.Expenses.findAll({
-        where: { user_id: id },
-        attributes: ["id", "amount", "expense_date"],
-        raw: true,
-      });
-      if (!weekly || !weekly.length) throw "error no found";
-      let fmt = weekly.map((w) => ({
-        id: w.id,
-        amount: w.amount,
-        exp: moment(w.expense_date).format(f),
-        exp_utc: moment(w.expense_date).utc().format(f),
-        exp_off: moment(w.expense_date).utcOffset(ctz).format(f),
-        exp_utc_off: moment(w.expense_date).utc().utcOffset(ctz).format(f),
-      }));
+  let labels = [];
+  let vals = [];
 
-      console.log(weekly);
-      console.log(fmt);
-      return res.status(200).json({ weekly, fmt, off });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(501)
-        .json({ success: false, msg: "Cannot fetch expense", error });
+  for (let i = span; i >= 0; i--) {
+    let date = moment().subtract(i, "days").utcOffset(ctz).format("DD-MM-YYYY");
+    console.log(date);
+    labels.push(date);
+    let sum = 0;
+    for (let j = 0; j < fmt.length; j++) {
+      if (fmt[j].date === date) {
+        sum += fmt[j].amount;
+      }
     }
-  },
+    vals.push(sum);
+  }
+  console.log("<-- Labels", labels);
+  console.log("<-- values", vals);
+};
+//fun();
+const methods = {
   weekGraph: async (req, res) => {
     console.log("<== Weekly Graph Called");
     try {
-      let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
+      let span = 6;
+      let ctz = 300;
+      let dt = "DD-MM-YYYY";
       let f = "HH:mm DD-MM-YYYY";
       let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
       let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
@@ -68,19 +65,13 @@ const methods = {
       console.log("end -->", end);
       let weekly = await model.Expenses.findAll({
         where: {
-          user_id: req.token.id,
+          user_id: 6,
           expense_date: {
             [Op.between]: [start, end],
           },
         },
-        attributes: [
-          [Sequelize.fn("SUM", Sequelize.col("amount")), "total_sum"],
-          [Sequelize.fn("day", Sequelize.col("expense_date")), "day"],
-          [Sequelize.fn("month", Sequelize.col("expense_date")), "month"],
-          [Sequelize.fn("year", Sequelize.col("expense_date")), "year"],
-        ],
-        group: ["day", "month", "year"],
-        order: ["month", "day"],
+        attributes: ["amount", "expense_date"],
+        order: ["expense_date"],
         raw: true,
       });
       if (!weekly) throw "Error! Cannot fetch expenses";
@@ -91,26 +82,28 @@ const methods = {
           result: null,
         });
       }
-      const fmt_week = weekly.map((x) => ({
-        sum: x.total_sum,
-        date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
-          "DD-MM-YYYY"
-        ),
+      let fmt = weekly.map((w) => ({
+        amount: w.amount,
+        date: moment(w.expense_date).utcOffset(ctz).format(dt),
       }));
+      console.log(fmt);
       let labels = [];
       let vals = [];
+
       for (let i = span; i >= 0; i--) {
-        let date = moment().subtract(i, "days").format("DD-MM-YYYY");
-        let found = false;
+        let date = moment()
+          .subtract(i, "days")
+          .utcOffset(ctz)
+          .format("DD-MM-YYYY");
+        console.log(date);
         labels.push(date);
-        for (let j = 0; j < fmt_week.length; j++) {
-          if (fmt_week[j].date === date) {
-            found = true;
-            vals.push(fmt_week[j].sum);
-            break;
+        let sum = 0;
+        for (let j = 0; j < fmt.length; j++) {
+          if (fmt[j].date === date) {
+            sum += fmt[j].amount;
           }
         }
-        if (!found) vals.push(0);
+        vals.push(sum);
       }
       return res.status(200).json({
         success: true,
@@ -176,6 +169,75 @@ const methods = {
           if (fmt_month[j].date === date) {
             found = true;
             vals.push(fmt_month[j].sum);
+            break;
+          }
+        }
+        if (!found) vals.push(0);
+      }
+      return res.status(200).json({
+        success: true,
+        msg: "Expenses fetched Successfully",
+        result: { labels, vals },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(501)
+        .json({ success: false, msg: "Cannot fetch expense", error });
+    }
+  },
+  weekGraph_old: async (req, res) => {
+    console.log("<== Weekly Graph Called");
+    try {
+      let span = 6;
+      if (!req.token?.id) throw "Error! Invalid request";
+      let f = "HH:mm DD-MM-YYYY";
+      let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
+      let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
+      let end = moment(zeroTime, f).add(1, "day").utc(true).toDate();
+      console.log("start -->", start);
+      console.log("end -->", end);
+      let weekly = await model.Expenses.findAll({
+        where: {
+          user_id: req.token.id,
+          expense_date: {
+            [Op.between]: [start, end],
+          },
+        },
+        attributes: [
+          [Sequelize.fn("SUM", Sequelize.col("amount")), "total_sum"],
+          [Sequelize.fn("day", Sequelize.col("expense_date")), "day"],
+          [Sequelize.fn("month", Sequelize.col("expense_date")), "month"],
+          [Sequelize.fn("year", Sequelize.col("expense_date")), "year"],
+        ],
+        group: ["day", "month", "year"],
+        order: ["month", "day"],
+        raw: true,
+      });
+      if (!weekly) throw "Error! Cannot fetch expenses";
+      if (!weekly.length) {
+        return res.status(200).json({
+          success: true,
+          msg: "Expenses fetched Successfully",
+          result: null,
+        });
+      }
+      const fmt_week = weekly.map((x) => ({
+        sum: x.total_sum,
+        date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
+          "DD-MM-YYYY"
+        ),
+      }));
+      let labels = [];
+      let vals = [];
+      for (let i = span; i >= 0; i--) {
+        let date = moment().subtract(i, "days").format("DD-MM-YYYY");
+        let found = false;
+        labels.push(date);
+        for (let j = 0; j < fmt_week.length; j++) {
+          if (fmt_week[j].date === date) {
+            found = true;
+            vals.push(fmt_week[j].sum);
             break;
           }
         }
