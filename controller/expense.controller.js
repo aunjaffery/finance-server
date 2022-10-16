@@ -231,7 +231,7 @@ const methods = {
     console.log("<== Get Expense Called");
     try {
       if (!req.token?.id) throw "Error! Invalid request";
-      let f = "HH:mm DD-MM-YYYY";
+      let f = "HH:mm DD-MMM-YYYY";
       let { date } = req.body;
       if (!date) throw "Error! No date found";
       let start = moment(`00:00 01-${date}`, f).utcOffset(300).toDate();
