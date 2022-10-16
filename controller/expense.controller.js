@@ -7,6 +7,7 @@ const moment = require("moment");
 
 const methods = {
   weekGraph: async (req, res) => {
+    console.log("<== Weekly Graph Called");
     try {
       let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
@@ -75,7 +76,7 @@ const methods = {
     }
   },
   monthGraph: async (req, res) => {
-    console.log("<== Month Graph Called");
+    console.log("<== Monthly Graph Called");
     try {
       let span = 11;
       if (!req.token?.id) throw "Error! Invalid request";
