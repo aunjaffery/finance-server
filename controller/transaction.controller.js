@@ -64,6 +64,7 @@ const methods = {
   createTransaction: async (req, res) => {
     console.log("<== Create transaction Called");
     let data = req.body;
+	  console.log(data)
     try {
       if (!data || !data.amount || !data.client_id)
         throw "Error! Invalid request";

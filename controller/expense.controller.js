@@ -5,35 +5,17 @@ const moment = require("moment");
 //let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
 //console.log(date)
 
-const func = async () => {
-  let span = 6;
-  let f = "HH:mm DD-MM-YYYY";
-  let dateNow = moment().utc().format("HH:mm DD-MM-YYYY");
-  let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
-  console.log("c --->", dateNow, zeroTime);
-  let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
-  let end = moment(dateNow, f).utc(true).toDate();
-  console.log("start -->", start);
-  console.log("end -->", end);
-  console.log("res -->", moment(start).format(f), moment(end).format(f));
-};
-func();
 const methods = {
   weekGraph: async (req, res) => {
-    console.log("<== Week Graph Called");
-    console.log("<== WIHTOUT", moment().format("hhA DD-MMM"));
-    console.log("<== UTC FALSE", moment().utc().format("hhA DD-MMM"));
     try {
       let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
       let f = "HH:mm DD-MM-YYYY";
       let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
-      console.log("Zero --->", zeroTime);
       let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
       let end = moment(zeroTime, f).add(1, "day").utc(true).toDate();
       console.log("start -->", start);
       console.log("end -->", end);
-      console.log("res -->", moment(start).format(f), moment(end).format(f));
       let weekly = await model.Expenses.findAll({
         where: {
           user_id: req.token.id,
@@ -59,14 +41,12 @@ const methods = {
           result: null,
         });
       }
-      console.log(weekly);
       const fmt_week = weekly.map((x) => ({
         sum: x.total_sum,
         date: moment(`${x.day}-${x.month}-${x.year}`, "D-M-YYYY").format(
           "DD-MM-YYYY"
         ),
       }));
-      console.log(fmt_week);
       let labels = [];
       let vals = [];
       for (let i = span; i >= 0; i--) {
@@ -99,13 +79,15 @@ const methods = {
     try {
       let span = 11;
       if (!req.token?.id) throw "Error! Invalid request";
-      let month = moment().format("DD-MM-YYYY");
-      let start = moment(moment().format("01-MM-YYYY"), "DD-MM-YYYY")
-        .utc()
+      let f = "HH:mm DD-MM-YYYY";
+      let zeroTime = moment().utc().format("00:00 01-MM-YYYY");
+      let start = moment(zeroTime, f)
+        .utc(true)
         .subtract(span, "months")
         .toDate();
-      let end = moment(`${month}`, "DD-MM-YYYY").add(1, "day").utc().toDate();
-      console.log(start, end);
+      let end = moment().utc().toDate();
+      console.log("start -->", start);
+      console.log("end -->", end);
       let monthly = await model.Expenses.findAll({
         where: {
           user_id: req.token.id,
