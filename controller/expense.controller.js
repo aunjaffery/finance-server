@@ -1,61 +1,86 @@
 const model = require("../models/index");
 const { Op, Sequelize } = require("sequelize");
 const moment = require("moment");
-//SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-//let date = moment("12-10 01am", "DD-MM hhA").utc(false).format("hha DD-MM")
-//console.log(date)
-const fun = async () => {
-  let span = 6;
-  let ctz = 300;
-  let dt = "DD-MM-YYYY";
-  let f = "HH:mm DD-MM-YYYY";
-  let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
-  let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
-  let end = moment(zeroTime, f).add(1, "day").utc(true).toDate();
-  console.log("start -->", start);
-  console.log("end -->", end);
-  let weekly = await model.Expenses.findAll({
-    where: {
-      user_id: 6,
-      expense_date: {
-        [Op.between]: [start, end],
-      },
-    },
-    attributes: ["amount", "expense_date"],
-    order: ["expense_date"],
-    raw: true,
-  });
-  let fmt = weekly.map((w) => ({
-    amount: w.amount,
-    date: moment(w.expense_date).utcOffset(ctz).format(dt),
-  }));
-  console.log(fmt);
-  let labels = [];
-  let vals = [];
 
-  for (let i = span; i >= 0; i--) {
-    let date = moment().subtract(i, "days").utcOffset(ctz).format("DD-MM-YYYY");
-    console.log(date);
-    labels.push(date);
-    let sum = 0;
-    for (let j = 0; j < fmt.length; j++) {
-      if (fmt[j].date === date) {
-        sum += fmt[j].amount;
-      }
-    }
-    vals.push(sum);
-  }
-  console.log("<-- Labels", labels);
-  console.log("<-- values", vals);
-};
-//fun();
 const methods = {
+  monthGraph: async (req, res) => {
+    console.log("<== Monthly Graph Called");
+    try {
+      let span = 11;
+      let ctz = 300;
+      if (req.query.offset) {
+        let pint = parseInt(req.query.offset);
+        ctz = pint ? pint : 300;
+      }
+      if (!req.token?.id) throw "Error! Invalid request";
+      let dt = "MM-YYYY";
+      let f = "HH:mm DD-MM-YYYY";
+      let zeroTime = moment().utc().format("00:00 01-MM-YYYY");
+      let start = moment(zeroTime, f)
+        .utc(true)
+        .subtract(span, "months")
+        .toDate();
+      let end = moment().utc().toDate();
+      console.log("start -->", start);
+      console.log("end -->", end);
+      let monthly = await model.Expenses.findAll({
+        where: {
+          user_id: req.token.id,
+          expense_date: {
+            [Op.between]: [start, end],
+          },
+        },
+        attributes: ["amount", "expense_date"],
+        order: ["expense_date"],
+        raw: true,
+      });
+      if (!monthly) throw "Error! Cannot fetch expenses";
+      if (!monthly.length) {
+        return res.status(200).json({
+          success: true,
+          msg: "Expenses fetched Successfully",
+          result: null,
+        });
+      }
+      let fmt = monthly.map((w) => ({
+        amount: w.amount,
+        date: moment(w.expense_date).utcOffset(ctz).format(dt),
+      }));
+      let labels = [];
+      let vals = [];
+      for (let i = span; i >= 0; i--) {
+        let date = moment().subtract(i, "months").utcOffset(ctz).format(dt);
+        labels.push(date);
+        let sum = 0;
+        for (let j = 0; j < fmt.length; j++) {
+          if (fmt[j].date === date) {
+            sum += fmt[j].amount;
+          }
+        }
+        vals.push(sum);
+      }
+      return res.status(200).json({
+        success: true,
+        msg: "Expenses fetched Successfully",
+        result: { labels, vals },
+      });
+    } catch (error) {
+      console.log(error);
+      return res
+        .status(501)
+        .json({ success: false, msg: "Cannot fetch expense", error });
+    }
+  },
   weekGraph: async (req, res) => {
     console.log("<== Weekly Graph Called");
     try {
       if (!req.token?.id) throw "Error! Invalid request";
       let span = 6;
       let ctz = 300;
+      if (req.query.offset) {
+        let pint = parseInt(req.query.offset);
+        ctz = pint ? pint : 300;
+      }
       let dt = "DD-MM-YYYY";
       let f = "HH:mm DD-MM-YYYY";
       let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
@@ -86,16 +111,10 @@ const methods = {
         amount: w.amount,
         date: moment(w.expense_date).utcOffset(ctz).format(dt),
       }));
-      console.log(fmt);
       let labels = [];
       let vals = [];
-
       for (let i = span; i >= 0; i--) {
-        let date = moment()
-          .subtract(i, "days")
-          .utcOffset(ctz)
-          .format("DD-MM-YYYY");
-        console.log(date);
+        let date = moment().subtract(i, "days").utcOffset(ctz).format(dt);
         labels.push(date);
         let sum = 0;
         for (let j = 0; j < fmt.length; j++) {
@@ -104,75 +123,6 @@ const methods = {
           }
         }
         vals.push(sum);
-      }
-      return res.status(200).json({
-        success: true,
-        msg: "Expenses fetched Successfully",
-        result: { labels, vals },
-      });
-    } catch (error) {
-      console.log(error);
-      return res
-        .status(501)
-        .json({ success: false, msg: "Cannot fetch expense", error });
-    }
-  },
-  monthGraph: async (req, res) => {
-    console.log("<== Monthly Graph Called");
-    try {
-      let span = 11;
-      if (!req.token?.id) throw "Error! Invalid request";
-      let f = "HH:mm DD-MM-YYYY";
-      let zeroTime = moment().utc().format("00:00 01-MM-YYYY");
-      let start = moment(zeroTime, f)
-        .utc(true)
-        .subtract(span, "months")
-        .toDate();
-      let end = moment().utc().toDate();
-      console.log("start -->", start);
-      console.log("end -->", end);
-      let monthly = await model.Expenses.findAll({
-        where: {
-          user_id: req.token.id,
-          expense_date: {
-            [Op.between]: [start, end],
-          },
-        },
-        attributes: [
-          [Sequelize.fn("SUM", Sequelize.col("amount")), "total_sum"],
-          [Sequelize.fn("month", Sequelize.col("expense_date")), "month"],
-          [Sequelize.fn("year", Sequelize.col("expense_date")), "year"],
-        ],
-        group: ["month", "year"],
-        order: ["year", "month"],
-        raw: true,
-      });
-      if (!monthly) throw "Error! Cannot fetch expenses";
-      if (!monthly.length) {
-        return res.status(200).json({
-          success: true,
-          msg: "Expenses fetched Successfully",
-          result: null,
-        });
-      }
-      const fmt_month = monthly.map((x) => ({
-        sum: x.total_sum,
-        date: moment(`${x.month}-${x.year}`, "M-YYYY").format("MM-YYYY"),
-      }));
-      let labels = [];
-      let vals = [];
-      for (let i = span; i >= 0; i--) {
-        let date = moment().subtract(i, "months").format("MM-YYYY");
-        let found = false;
-        labels.push(date);
-        for (let j = 0; j < fmt_month.length; j++) {
-          if (fmt_month[j].date === date) {
-            found = true;
-            vals.push(fmt_month[j].sum);
-            break;
-          }
-        }
-        if (!found) vals.push(0);
       }
       return res.status(200).json({
         success: true,
