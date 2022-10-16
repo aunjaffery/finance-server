@@ -27,11 +27,10 @@ const methods = {
       let span = 6;
       if (!req.token?.id) throw "Error! Invalid request";
       let f = "HH:mm DD-MM-YYYY";
-      let dateNow = moment().utc().format("HH:mm DD-MM-YYYY");
       let zeroTime = moment().utc().format("00:00 DD-MM-YYYY");
-      console.log("c --->", dateNow, zeroTime);
+      console.log("Zero --->", zeroTime);
       let start = moment(zeroTime, f).utc(true).subtract(span, "days").toDate();
-      let end = moment(dateNow, f).utc(true).toDate();
+      let end = moment(zeroTime, f).add(1, "day").utc(true).toDate();
       console.log("start -->", start);
       console.log("end -->", end);
       console.log("res -->", moment(start).format(f), moment(end).format(f));
