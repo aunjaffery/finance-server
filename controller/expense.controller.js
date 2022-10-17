@@ -1,17 +1,14 @@
 const model = require("../models/index");
 const { Op, Sequelize } = require("sequelize");
 const moment = require("moment");
-let f = "HH:mm DD-MM-YYYY";
-let n = moment(`00:00 01-10-2022`, f).utc().utcOffset(300).format();
-console.log(n);
-console.log(moment(n).toDate());
+
 const methods = {
   monthGraph: async (req, res) => {
     console.log("<== Monthly Graph Called");
     try {
       let span = 11;
       let ctz = 300;
-      if (req.query.offset) {
+      if (req.query?.offset) {
         let pint = parseInt(req.query.offset);
         ctz = pint ? pint : 300;
       }
@@ -80,7 +77,7 @@ const methods = {
       if (!req.token?.id) throw "Error! Invalid request";
       let span = 6;
       let ctz = 300;
-      if (req.query.offset) {
+      if (req.query?.offset) {
         let pint = parseInt(req.query.offset);
         ctz = pint ? pint : 300;
       }
@@ -234,19 +231,21 @@ const methods = {
     console.log("<== Get Expense Called");
     try {
       if (!req.token?.id) throw "Error! Invalid request";
+      let ctz = 300;
+      if (req.body?.offset) {
+        let pint = parseInt(req.body.offset);
+        ctz = pint ? pint : 300;
+      }
       let f = "HH:mm DD-MMM-YYYY";
       let { date } = req.body;
       if (!date) throw "Error! No date found";
-      let n = moment(`00:00 01-${date}`, f).utc().utcOffset(300).format();
-      console.log(n);
-      console.log(moment(n).toDate());
       let start = moment(`00:00 01-${date}`, f)
         .utc(true)
-        .subtract(300, "minutes")
+        .subtract(ctz, "minutes")
         .toDate();
       let end = moment(`00:00 01-${date}`, f)
         .utc(true)
-        .subtract(300, "minutes")
+        .subtract(ctz, "minutes")
         .add("1", "month")
         .toDate();
       console.log("start -->", start);
